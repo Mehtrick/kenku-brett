@@ -51,25 +51,27 @@ Diese IP muss beim Starten des Containers übergeben werden, damit Nginx die API
 Das Image wird automatisch über GitHub Actions zu GitHub Packages (GitHub Container Registry) gepusht:
 
 ```text
-ghcr.io/DEIN_GITHUB_USERNAME/kenku-brett
+ghcr.io/mehtrick/kenku-brett
 ```
 
 > **Hinweis:** Bevor du ein Image aus `ghcr.io` ziehen kannst, musst du dich ggf. mit einem GitHub-Personal-Access-Token anmelden, das mindestens das `read:packages`-Scope hat.
 
 ```bash
-echo DEIN_GITHUB_TOKEN | docker login ghcr.io -u DEIN_GITHUB_USERNAME --password-stdin
+echo DEIN_GITHUB_TOKEN | docker login ghcr.io -u mehtrick --password-stdin
 ```
 
 ## Container starten
 
 Der entscheidende Teil ist die Umgebungsvariable `KENKU_IP`. Sie muss die zuvor ermittelte **lokale IP-Adresse** des Kenku-Rechners enthalten.
 
+> **Achtung Reihenfolge:** Alle Docker-Optionen (`-d`, `--name`, `-p`, `-e`) müssen **vor** dem Image-Namen stehen. Alles nach dem Image-Namen wird als Container-Befehl interpretiert und führt zu Fehlern wie `illegal option -p`.
+
 ```bash
 docker run -d \
   --name kenku-brett \
   -p 8080:80 \
   -e KENKU_IP=192.168.178.42 \
-  ghcr.io/DEIN_GITHUB_USERNAME/kenku-brett:latest
+  ghcr.io/mehtrick/kenku-brett:latest
 ```
 
 Danach ist die Oberfläche unter `http://DOCKER_HOST_IP:8080` erreichbar.
@@ -79,7 +81,7 @@ Danach ist die Oberfläche unter `http://DOCKER_HOST_IP:8080` erreichbar.
 ```yaml
 services:
   kenku-brett:
-    image: ghcr.io/DEIN_GITHUB_USERNAME/kenku-brett:latest
+    image: ghcr.io/mehtrick/kenku-brett:latest
     ports:
       - "8080:80"
     environment:
