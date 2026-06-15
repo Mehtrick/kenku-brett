@@ -17,7 +17,7 @@ Kenku selbst bietet einen lokalen Remote-API-Server auf Port `3333`. Dieser Cont
 
 1. Öffne Kenku.
 2. Aktiviere unter **Settings → Remote** den Remote-Server (Port `3333`).
-3. Notiere dir die angezeigte **lokale IPv4-Adresse**.
+3. Hinterlege die lokale IP des Rechners auf dem Kenku läuft.
 
 ### Woher bekomme ich die IP?
 
