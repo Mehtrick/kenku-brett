@@ -1,0 +1,12 @@
+server {
+    listen 80;
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+    }
+
+    location /v1/ {
+        proxy_pass http://${KENKU_IP}:3333/v1/;
+    }
+}
