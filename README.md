@@ -54,12 +54,6 @@ Das Image wird automatisch über GitHub Actions zu GitHub Packages (GitHub Conta
 ghcr.io/mehtrick/kenku-brett
 ```
 
-> **Hinweis:** Bevor du ein Image aus `ghcr.io` ziehen kannst, musst du dich ggf. mit einem GitHub-Personal-Access-Token anmelden, das mindestens das `read:packages`-Scope hat.
-
-```bash
-echo DEIN_GITHUB_TOKEN | docker login ghcr.io -u mehtrick --password-stdin
-```
-
 ## Container starten
 
 Der entscheidende Teil ist die Umgebungsvariable `KENKU_IP`. Sie muss die zuvor ermittelte **lokale IP-Adresse** des Kenku-Rechners enthalten.
