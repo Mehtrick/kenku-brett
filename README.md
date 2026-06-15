@@ -98,7 +98,3 @@ docker build -f dockerfile -t kenku-brett .
 docker run -d -p 8080:80 -e KENKU_IP=192.168.178.42 kenku-brett
 ```
 
-## GitHub Actions
-
-Bei jedem Push auf `main`/`master` oder bei Veröffentlichung eines Tags wird ein neues Image gebaut und nach GitHub Packages gepusht.  
-Die Workflow-Datei findest du unter `.github/workflows/docker-publish.yml`.
