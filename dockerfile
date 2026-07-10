@@ -5,4 +5,7 @@ COPY manifest.json /usr/share/nginx/html/manifest.json
 COPY sw.js /usr/share/nginx/html/sw.js
 COPY icon-192.png /usr/share/nginx/html/icon-192.png
 COPY icon-512.png /usr/share/nginx/html/icon-512.png
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 EXPOSE 80
+ENTRYPOINT ["/entrypoint.sh"]
