@@ -17,9 +17,11 @@ Kenku selbst bietet einen lokalen Remote-API-Server auf Port `3333`. Dieser Cont
 
 1. Öffne Kenku.
 2. Aktiviere unter **Settings → Remote** den Remote-Server (Port `3333`).
-3. Hinterlege die lokale IP des Rechners auf dem Kenku läuft.
+3. Starte den Container (die IP wird automatisch erkannt, oder du kannst sie manuell setzen).
 
 ### Woher bekomme ich die IP?
+
+**Normalerweise musst du die IP nicht kennen** - der Container erkennt sie automatisch. Falls du sie dennoch manuell setzen möchtest (z.B. wenn Kenku auf einem anderen Rechner läuft):
 
 Die IP ist die Adresse deines Computers im lokalen Netzwerk, **nicht** `localhost` oder `127.0.0.1`.
 
@@ -43,7 +45,7 @@ Ein typisches Beispiel wäre:
 192.168.178.42
 ```
 
-Diese IP muss beim Starten des Containers übergeben werden, damit Nginx die API-Aufrufe an Kenku weiterleiten kann.
+Diese IP kann beim Starten des Containers übergeben werden, damit Nginx die API-Aufrufe an Kenku weiterleiten kann.
 
 ## Image aus GitHub Packages verwenden
 
@@ -55,9 +57,24 @@ ghcr.io/mehtrick/kenku-brett
 
 ## Container starten
 
-Der entscheidende Teil ist die Umgebungsvariable `KENKU_IP`. Sie muss die zuvor ermittelte **lokale IP-Adresse** des Kenku-Rechners enthalten.
+Die Umgebungsvariable `KENKU_IP` ist **optional**. Wenn du sie nicht setzt, verwendet der Container automatisch die Gateway-IP des Docker-Netzwerks (normalerweise dein Host-Rechner).
 
 > **Achtung Reihenfolge:** Alle Docker-Optionen (`-d`, `--name`, `-p`, `-e`) müssen **vor** dem Image-Namen stehen. Alles nach dem Image-Namen wird als Container-Befehl interpretiert und führt zu Fehlern wie `illegal option -p`.
+
+### Automatische IP-Erkennung (empfohlen)
+
+Wenn Kenku auf demselben Rechner läuft wie Docker:
+
+```bash
+docker run -d \
+  --name kenku-brett \
+  -p 8080:80 \
+  ghcr.io/mehtrick/kenku-brett:latest
+```
+
+### Manuelle IP-Konfiguration
+
+Wenn Kenku auf einem anderen Rechner im Netzwerk läuft, setze `KENKU_IP` auf die **lokale IP-Adresse** des Kenku-Rechners:
 
 ```bash
 docker run -d \
@@ -77,6 +94,17 @@ services:
     image: ghcr.io/mehtrick/kenku-brett:latest
     ports:
       - "8080:80"
+    restart: unless-stopped
+```
+
+Oder mit manueller IP:
+
+```yaml
+services:
+  kenku-brett:
+    image: ghcr.io/mehtrick/kenku-brett:latest
+    ports:
+      - "8080:80"
     environment:
       KENKU_IP: "192.168.178.42"
     restart: unless-stopped
@@ -84,9 +112,10 @@ services:
 
 ## Wichtige Hinweise zur IP
 
+- Wenn `KENKU_IP` nicht gesetzt ist, wird automatisch die Gateway-IP des Docker-Netzwerks verwendet (normalerweise dein Host-Rechner).
 - `KENKU_IP` darf **nicht** `localhost` oder `127.0.0.1` sein, wenn Kenku außerhalb des Containers läuft.
 - Innerhalb eines Docker-Containers bezeichnet `localhost` den Container selbst, nicht den Host-Rechner.
-- Deshalb muss die echte **LAN-IP-Adresse** des Kenku-Rechners verwendet werden.
+- Deshalb muss die echte **LAN-IP-Adresse** des Kenku-Rechners verwendet werden, wenn Kenku auf einem anderen Rechner läuft.
 - Wenn sich die IP des Kenku-Rechners ändert (z. B. durch DHCP), muss der Container mit der neuen IP neu gestartet werden.
 
 ## Lokales Bauen
@@ -95,6 +124,12 @@ Wenn du das Image selbst bauen möchtest:
 
 ```bash
 docker build -f dockerfile -t kenku-brett .
+docker run -d -p 8080:80 kenku-brett
+```
+
+Oder mit manueller IP:
+
+```bash
 docker run -d -p 8080:80 -e KENKU_IP=192.168.178.42 kenku-brett
 ```
 
