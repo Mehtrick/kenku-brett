@@ -8,6 +8,22 @@
     <style>
         /* Verhindert störendes Browser-Verhalten auf Mobilgeräten */
         body { overscroll-behavior-y: contain; touch-action: manipulation; }
+        
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(0);
+            animation: ripple-animation 0.6s ease-out;
+            pointer-events: none;
+        }
+        
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-6 font-sans antialiased selection:bg-blue-500/30">
@@ -30,7 +46,7 @@
             </button>
         </header>
 
-        <div id="grid" class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 pb-8">
+        <div id="grid" class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 pb-8">
             <div class="col-span-full text-center text-blue-400 py-10 animate-pulse">
                 Verbinde...
             </div>
@@ -40,6 +56,15 @@
     <script>
         // Nutzt den Nginx-Proxy (relativer Pfad)
         const getApiUrl = () => '/v1/soundboard';
+
+        function getColorFromName(name) {
+            let hash = 0;
+            for (let i = 0; i < name.length; i++) {
+                hash = name.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            const hue = Math.abs(hash % 360);
+            return `hsl(${hue}, 85%, 55%)`;
+        }
 
         async function loadSounds() {
             const grid = document.getElementById('grid');
@@ -52,18 +77,70 @@
                 const data = await response.json();
                 grid.innerHTML = '';
                 
-                if (data.sounds && data.sounds.length > 0) {
-                    data.sounds.forEach(sound => {
-                        const btn = document.createElement('button');
-                        btn.className = 'group relative flex flex-col items-center justify-center p-4 min-h-[100px] bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/50 rounded-2xl transition-all duration-200 active:scale-95 shadow-lg overflow-hidden';
+                if (data.soundboards && data.soundboards.length > 0) {
+                    const soundsMap = {};
+                    if (data.sounds) {
+                        data.sounds.forEach(sound => {
+                            soundsMap[sound.id] = sound;
+                        });
+                    }
+                    
+                    data.soundboards.sort((a, b) => a.title.localeCompare(b.title, 'de'));
+                    
+                    data.soundboards.forEach(soundboard => {
+                        const section = document.createElement('div');
+                        section.className = 'col-span-full mb-6';
                         
-                        btn.innerHTML = `
-                            <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <span class="text-sm font-medium text-slate-300 group-hover:text-white text-center break-words z-10 transition-colors">${sound.title}</span>
-                        `;
+                        const boardColor = getColorFromName(soundboard.title);
                         
-                        btn.onclick = () => playSound(sound.id);
-                        grid.appendChild(btn);
+                        const title = document.createElement('h2');
+                        title.className = 'text-xl font-bold mb-3 px-2';
+                        title.style.color = boardColor;
+                        title.textContent = soundboard.title;
+                        section.appendChild(title);
+                        
+                        const soundsGrid = document.createElement('div');
+                        soundsGrid.className = 'grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5';
+                        
+                        const boardSounds = [];
+                        if (soundboard.sounds) {
+                            soundboard.sounds.forEach(soundId => {
+                                const sound = soundsMap[soundId];
+                                if (sound) {
+                                    boardSounds.push(sound);
+                                }
+                            });
+                        }
+                        
+                        boardSounds.sort((a, b) => a.title.localeCompare(b.title, 'de'));
+                        
+                        boardSounds.forEach(sound => {
+                            const btn = document.createElement('button');
+                            btn.className = 'group relative flex flex-col items-center justify-center p-4 min-h-[100px] bg-slate-900 hover:bg-slate-800 border-2 border-slate-800 hover:border-blue-500/50 rounded-2xl transition-all duration-200 active:scale-95 shadow-lg overflow-hidden';
+                            btn.style.borderColor = boardColor;
+                            
+                            btn.innerHTML = `
+                                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <span class="text-base sm:text-lg font-medium text-slate-300 group-hover:text-white text-center break-words z-10 transition-colors">${sound.title}</span>
+                            `;
+                            
+                            btn.onclick = (e) => {
+                                const ripple = document.createElement('span');
+                                ripple.className = 'ripple';
+                                const rect = btn.getBoundingClientRect();
+                                const size = Math.max(rect.width, rect.height);
+                                ripple.style.width = ripple.style.height = size + 'px';
+                                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                                btn.appendChild(ripple);
+                                setTimeout(() => ripple.remove(), 600);
+                                playSound(sound.id);
+                            };
+                            soundsGrid.appendChild(btn);
+                        });
+                        
+                        section.appendChild(soundsGrid);
+                        grid.appendChild(section);
                     });
                 } else {
                     grid.innerHTML = '<div class="col-span-full text-center text-slate-500 py-10">Keine Sounds gefunden.</div>';
