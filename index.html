@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Kenku Remote</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#3b82f6">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Verhindert störendes Browser-Verhalten auf Mobilgeräten */
@@ -24,27 +28,142 @@
                 opacity: 0;
             }
         }
+        
+        .favorite-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            z-index: 20;
+            transition: transform 0.2s ease;
+        }
+        
+        .favorite-btn:hover {
+            transform: scale(1.2);
+        }
+        
+        .favorite-btn:active {
+            transform: scale(0.9);
+        }
+        
+        .tab-btn {
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .tab-btn.active {
+            background: rgb(59 130 246);
+            color: white;
+        }
+        
+        .tab-btn:not(.active) {
+            background: rgb(30 41 59);
+            color: rgb(148 163 184);
+        }
+        
+        .tab-btn:not(.active):hover {
+            background: rgb(51 65 85);
+            color: rgb(226 232 240);
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .modal-content {
+            background: rgb(30 41 59);
+            border: 1px solid rgb(71 85 105);
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        #grid {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        
+        #grid.fade-out {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        
+        .install-banner {
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgb(30 41 59);
+            border: 1px solid rgb(71 85 105);
+            border-radius: 1rem;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 90;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-6 font-sans antialiased selection:bg-blue-500/30">
 
     <div class="max-w-4xl mx-auto">
         
-        <header class="mb-8 flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-sm">
+        <header class="mb-6 flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl border border-slate-800 shadow-xl backdrop-blur-sm">
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
                 Kenku Soundboard
             </h1>
             
-            <button 
-                onclick="loadSounds()"
-                class="p-2 sm:px-4 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-all duration-200 active:scale-95 flex items-center gap-2"
-                title="Sounds neu laden"
-            >
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-            </button>
+            <div class="flex gap-2">
+                <button 
+                    onclick="showInfoModal()"
+                    class="p-2 sm:px-4 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-all duration-200 active:scale-95 flex items-center gap-2"
+                    title="Hilfe"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </button>
+                
+                <button 
+                    onclick="loadSounds()"
+                    class="p-2 sm:px-4 sm:py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-all duration-200 active:scale-95 flex items-center gap-2"
+                    title="Sounds neu laden"
+                >
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
+            </div>
         </header>
+
+        <div class="sticky top-0 z-50 bg-slate-950/95 backdrop-blur-sm py-3 mb-6 -mx-4 px-4 md:-mx-6 md:px-6">
+            <div class="flex gap-2">
+                <button class="tab-btn active" onclick="switchTab('all')">Alle</button>
+                <button class="tab-btn" onclick="switchTab('favorites')">Favoriten</button>
+            </div>
+        </div>
 
         <div id="grid" class="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 pb-8">
             <div class="col-span-full text-center text-blue-400 py-10 animate-pulse">
@@ -56,6 +175,181 @@
     <script>
         // Nutzt den Nginx-Proxy (relativer Pfad)
         const getApiUrl = () => '/v1/soundboard';
+        
+        let allSounds = [];
+
+        function getPlayStats() {
+            return JSON.parse(localStorage.getItem('playStats') || '{}');
+        }
+
+        function savePlayStats(stats) {
+            localStorage.setItem('playStats', JSON.stringify(stats));
+        }
+
+        function getManualFavorites() {
+            return JSON.parse(localStorage.getItem('manualFavorites') || '[]');
+        }
+
+        function saveManualFavorites(favorites) {
+            localStorage.setItem('manualFavorites', JSON.stringify(favorites));
+        }
+
+        function toggleManualFavorite(soundId) {
+            const favorites = getManualFavorites();
+            const index = favorites.indexOf(soundId);
+            if (index > -1) {
+                favorites.splice(index, 1);
+            } else {
+                favorites.push(soundId);
+            }
+            saveManualFavorites(favorites);
+            updateFavoriteIcons();
+        }
+
+        function isFavorite(soundId) {
+            return getManualFavorites().includes(soundId);
+        }
+
+        function updateFavoriteIcons() {
+            document.querySelectorAll('[data-sound-id]').forEach(btn => {
+                const soundId = btn.getAttribute('data-sound-id');
+                const heart = btn.querySelector('.favorite-btn');
+                if (heart) {
+                    if (isFavorite(soundId)) {
+                        heart.innerHTML = '❤️';
+                        heart.classList.remove('text-slate-700', 'opacity-50');
+                        heart.classList.add('text-red-500');
+                    } else {
+                        heart.innerHTML = '🤍';
+                        heart.classList.remove('text-red-500');
+                        heart.classList.add('text-slate-700', 'opacity-50');
+                    }
+                }
+            });
+        }
+
+        function recordPlay(soundId) {
+            const stats = getPlayStats();
+            stats[soundId] = (stats[soundId] || 0) + 1;
+            savePlayStats(stats);
+        }
+
+        function createSoundButton(sound, boardColor) {
+            const btn = document.createElement('button');
+            btn.setAttribute('data-sound-id', sound.id);
+            btn.className = 'group relative flex flex-col items-center justify-center p-4 min-h-[100px] bg-slate-900 hover:bg-slate-800 border-2 border-slate-800 hover:border-blue-500/50 rounded-2xl transition-all duration-200 active:scale-95 shadow-lg overflow-hidden';
+            btn.style.borderColor = boardColor;
+            
+            const fav = isFavorite(sound.id);
+            
+            btn.innerHTML = `
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span class="text-base sm:text-lg font-medium text-slate-300 group-hover:text-white text-center break-words z-10 transition-colors">${sound.title}</span>
+                <button class="favorite-btn absolute top-2 right-2 text-lg ${fav ? 'text-red-500' : 'text-slate-700 opacity-50'}" onclick="event.stopPropagation(); toggleManualFavorite('${sound.id}')">${fav ? '❤️' : '🤍'}</button>
+            `;
+            
+            btn.onclick = (e) => {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                const rect = btn.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+                playSound(sound.id);
+                recordPlay(sound.id);
+            };
+            
+            return btn;
+        }
+
+        let currentTab = 'all';
+        let deferredPrompt = null;
+
+        function switchTab(tab) {
+            sessionStorage.setItem(`scroll-${currentTab}`, window.scrollY);
+            
+            const grid = document.getElementById('grid');
+            grid.classList.add('fade-out');
+            
+            setTimeout(() => {
+                currentTab = tab;
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.textContent.toLowerCase() === (tab === 'all' ? 'alle' : 'favoriten')) {
+                        btn.classList.add('active');
+                    }
+                });
+                renderSounds();
+                
+                const savedScroll = sessionStorage.getItem(`scroll-${tab}`);
+                if (savedScroll) {
+                    window.scrollTo(0, parseInt(savedScroll));
+                } else {
+                    window.scrollTo(0, 0);
+                }
+                
+                grid.classList.remove('fade-out');
+            }, 200);
+        }
+
+        function renderSounds() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+
+            if (currentTab === 'favorites') {
+                const favorites = getManualFavorites();
+                if (favorites.length === 0) {
+                    grid.innerHTML = '<div class="col-span-full text-center text-slate-500 py-10">Keine Favoriten vorhanden. Tippe auf das Herz bei einem Sound um ihn hinzuzufügen.</div>';
+                    return;
+                }
+                const favSounds = favorites.map(id => allSounds.find(s => s.id === id)).filter(Boolean);
+                const soundsGrid = document.createElement('div');
+                soundsGrid.className = 'col-span-full grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5';
+                favSounds.forEach(sound => {
+                    soundsGrid.appendChild(createSoundButton(sound, getColorFromName(sound.boardTitle || 'default')));
+                });
+                grid.appendChild(soundsGrid);
+            } else {
+                const soundsMap = {};
+                allSounds.forEach(sound => {
+                    soundsMap[sound.id] = sound;
+                });
+
+                const soundboards = {};
+                allSounds.forEach(sound => {
+                    const title = sound.boardTitle || 'default';
+                    if (!soundboards[title]) soundboards[title] = [];
+                    soundboards[title].push(sound);
+                });
+
+                Object.keys(soundboards).sort((a, b) => a.localeCompare(b, 'de')).forEach(title => {
+                    const section = document.createElement('div');
+                    section.className = 'col-span-full mb-6';
+
+                    const boardColor = getColorFromName(title);
+
+                    const heading = document.createElement('h2');
+                    heading.className = 'text-xl font-bold mb-3 px-2';
+                    heading.style.color = boardColor;
+                    heading.textContent = title;
+                    section.appendChild(heading);
+
+                    const soundsGrid = document.createElement('div');
+                    soundsGrid.className = 'grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5';
+
+                    soundboards[title].sort((a, b) => a.title.localeCompare(b.title, 'de'));
+                    soundboards[title].forEach(sound => {
+                        soundsGrid.appendChild(createSoundButton(sound, boardColor));
+                    });
+
+                    section.appendChild(soundsGrid);
+                    grid.appendChild(section);
+                });
+            }
+        }
 
         function getColorFromName(name) {
             let hash = 0;
@@ -75,7 +369,7 @@
                 if (!response.ok) throw new Error('Netzwerk-Antwort war nicht ok');
                 
                 const data = await response.json();
-                grid.innerHTML = '';
+                allSounds = [];
                 
                 if (data.soundboards && data.soundboards.length > 0) {
                     const soundsMap = {};
@@ -85,63 +379,19 @@
                         });
                     }
                     
-                    data.soundboards.sort((a, b) => a.title.localeCompare(b.title, 'de'));
-                    
                     data.soundboards.forEach(soundboard => {
-                        const section = document.createElement('div');
-                        section.className = 'col-span-full mb-6';
-                        
-                        const boardColor = getColorFromName(soundboard.title);
-                        
-                        const title = document.createElement('h2');
-                        title.className = 'text-xl font-bold mb-3 px-2';
-                        title.style.color = boardColor;
-                        title.textContent = soundboard.title;
-                        section.appendChild(title);
-                        
-                        const soundsGrid = document.createElement('div');
-                        soundsGrid.className = 'grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5';
-                        
-                        const boardSounds = [];
                         if (soundboard.sounds) {
                             soundboard.sounds.forEach(soundId => {
                                 const sound = soundsMap[soundId];
                                 if (sound) {
-                                    boardSounds.push(sound);
+                                    sound.boardTitle = soundboard.title;
+                                    allSounds.push(sound);
                                 }
                             });
                         }
-                        
-                        boardSounds.sort((a, b) => a.title.localeCompare(b.title, 'de'));
-                        
-                        boardSounds.forEach(sound => {
-                            const btn = document.createElement('button');
-                            btn.className = 'group relative flex flex-col items-center justify-center p-4 min-h-[100px] bg-slate-900 hover:bg-slate-800 border-2 border-slate-800 hover:border-blue-500/50 rounded-2xl transition-all duration-200 active:scale-95 shadow-lg overflow-hidden';
-                            btn.style.borderColor = boardColor;
-                            
-                            btn.innerHTML = `
-                                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                <span class="text-base sm:text-lg font-medium text-slate-300 group-hover:text-white text-center break-words z-10 transition-colors">${sound.title}</span>
-                            `;
-                            
-                            btn.onclick = (e) => {
-                                const ripple = document.createElement('span');
-                                ripple.className = 'ripple';
-                                const rect = btn.getBoundingClientRect();
-                                const size = Math.max(rect.width, rect.height);
-                                ripple.style.width = ripple.style.height = size + 'px';
-                                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
-                                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
-                                btn.appendChild(ripple);
-                                setTimeout(() => ripple.remove(), 600);
-                                playSound(sound.id);
-                            };
-                            soundsGrid.appendChild(btn);
-                        });
-                        
-                        section.appendChild(soundsGrid);
-                        grid.appendChild(section);
                     });
+                    
+                    renderSounds();
                 } else {
                     grid.innerHTML = '<div class="col-span-full text-center text-slate-500 py-10">Keine Sounds gefunden.</div>';
                 }
@@ -187,7 +437,88 @@
         window.onload = () => {
             loadSounds();
             requestWakeLock();
+            
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js');
+            }
         };
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            showInstallBanner();
+        });
+        
+        function showInstallBanner() {
+            if (document.getElementById('install-banner')) return;
+            
+            const banner = document.createElement('div');
+            banner.id = 'install-banner';
+            banner.className = 'install-banner';
+            banner.innerHTML = `
+                <span class="text-slate-200">Als App installieren?</span>
+                <button onclick="installApp()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors">Installieren</button>
+                <button onclick="dismissInstall()" class="p-2 text-slate-400 hover:text-white transition-colors">✕</button>
+            `;
+            document.body.appendChild(banner);
+        }
+        
+        async function installApp() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            const banner = document.getElementById('install-banner');
+            if (banner) banner.remove();
+        }
+        
+        function dismissInstall() {
+            const banner = document.getElementById('install-banner');
+            if (banner) banner.remove();
+        }
+        
+        function showInfoModal() {
+            document.getElementById('info-modal').classList.remove('hidden');
+        }
+        
+        function hideInfoModal() {
+            document.getElementById('info-modal').classList.add('hidden');
+        }
     </script>
+    
+    <div id="info-modal" class="modal-overlay hidden" onclick="if(event.target === this) hideInfoModal()">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-4 text-blue-400">Kenku Soundboard</h2>
+            
+            <div class="space-y-4 text-slate-300">
+                <div>
+                    <h3 class="font-semibold text-white mb-2">Sounds abspielen</h3>
+                    <p>Tippe auf eine Kachel um den Sound abzuspielen.</p>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-white mb-2">Favoriten verwalten</h3>
+                    <p>Klicke auf das Herz-Icon oben rechts an einer Kachel um den Sound zu deinen Favoriten hinzuzufügen oder zu entfernen. Favorisierte Sounds werden mit einem roten Herz markiert.</p>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-white mb-2">Navigation</h3>
+                    <p>Verwende die Tabs oben um zwischen allen Sounds und deinen Favoriten zu wechseln. Die Tabs bleiben beim Scrollen sichtbar.</p>
+                </div>
+                
+                <div>
+                    <h3 class="font-semibold text-white mb-2">Soundboards</h3>
+                    <p>Sounds sind nach Soundboards gruppiert. Jedes Board hat eine eigene Farbe zur besseren Orientierung. Boards und Sounds innerhalb der Boards sind alphabetisch sortiert.</p>
+                </div>
+            </div>
+            
+            <button 
+                onclick="hideInfoModal()"
+                class="mt-6 w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all duration-200 active:scale-95"
+            >
+                Verstanden
+            </button>
+        </div>
+    </div>
 </body>
 </html>
